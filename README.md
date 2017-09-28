@@ -11,5 +11,5 @@ Test for Position Func just run in your virtualenv
 Success result any time but all OK
 
 > ----------------------------------------------------------------------
-> Ran 3 tests in 0.009s
+> Ran 3 tests in 0.009s<br />
 > OK
