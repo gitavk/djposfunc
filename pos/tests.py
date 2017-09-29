@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.db.models import Func, F, Value
 
 from pos.models import A
 from pos.functions import Position
@@ -9,17 +10,24 @@ class CategoryTestCase(TestCase):
         'a.json',
     ]
 
+    def get_ann_cond(self, search):
+        """ Modify it for change annotate condition."""
+        # return Func(F('title'), Value(search), function='STRPOS')
+        # return Func(F('title'), Value(search), function='INSTR')
+        return Position('title', search)
+
     def test_pos_function_simple_search(self):
         """
         Simple test with usually used data
         """
-        search = 'port'
+        search = 'PORt'
         qs = A.objects.filter(
             title__icontains=search
         ).annotate(
-            pos=Position('title', search)
+            pos=self.get_ann_cond(search)
         ).order_by('pos').values_list('title', flat=True)
         qs_list = list(qs)
+        print("Test for search value: %s" % search)
         valid_list = ['Port 2', 'port 1', 'Bport', 'A port', 'Endport']
         self.assertListEqual(qs_list, valid_list)
 
@@ -27,13 +35,13 @@ class CategoryTestCase(TestCase):
         """
         Search in the same lines as in crashed test, but simple search string
         """
-        search = "from myapp_suburb;"
+        search = "from myApp_suburb;"
         qs = A.objects.filter(
             title__icontains=search
         ).annotate(
-            pos=Position('title', search)
+            pos=self.get_ann_cond(search)
         ).order_by('pos').values_list('title', flat=True)
-
+        print("Test for search value: %s" % search)
         qs_list = list(qs)
         valid_list = [
             "') in '') from myapp_suburb; b45646",
@@ -46,13 +54,13 @@ class CategoryTestCase(TestCase):
         """
         Crashed test.
         """
-        search = "') in '') from myapp_suburb;"
+        search = "') in '') from myApp_suburb;"
         qs = A.objects.filter(
             title__icontains=search
         ).annotate(
-            pos=Position('title', search)
+            pos=self.get_ann_cond(search)
         ).order_by('pos').values_list('title', flat=True)
-
+        print("Test for search value: %s" % search)
         qs_list = list(qs)
         valid_list = [
             "') in '') from myapp_suburb; b45646",
