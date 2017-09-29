@@ -1,4 +1,5 @@
-from django.db.models import Func
+from django.db.models import Func, F, Value
+from django.db.models.functions import Lower
 
 
 class Position(Func):
@@ -14,3 +15,19 @@ class Position(Func):
 
     def as_sqlite(self, compiler, connection):
         return self.as_sql(compiler, connection, template=self.template_sqlite)
+
+
+class Instr(Func):
+    function = 'INSTR'
+
+    def __init__(self, string, substring, insensitive=False, **extra):
+        if not substring:
+            raise ValueError('Empty substring not allowed')
+        if not insensitive:
+            expressions = F(string), Value(substring)
+        else:
+            expressions = Lower(string), Lower(Value(substring))
+        super(Instr, self).__init__(*expressions)
+
+    def as_postgresql(self, compiler, connection):
+        return self.as_sql(compiler, connection, function='STRPOS')
